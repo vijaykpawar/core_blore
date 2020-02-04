@@ -1,0 +1,142 @@
+package com.mwt.umap.crypto;
+
+import java.security.spec.KeySpec;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.DESedeKeySpec;
+
+
+
+/**
+ * Provides cryptography handlers.
+ * 
+ * <p>
+ * Uses DESede algorithm. A different implementation.
+ * </p>
+ * 
+ * 
+ * @author Rohan Jamkhedkar
+ */
+public class TripleDESEncryptor {
+
+	/** The Constant UNICODE_FORMAT. */
+	private static final String UNICODE_FORMAT = "UTF-8";
+
+	/** The Constant DESEDE_ENCRYPTION_SCHEME. */
+	public static final String DESEDE_ENCRYPTION_SCHEME = "DESede";
+
+	/** The my key spec. */
+	private KeySpec myKeySpec;
+
+	/** The my secret key factory. */
+	private SecretKeyFactory mySecretKeyFactory;
+
+	/** The cipher. */
+	private Cipher cipher;
+
+	/** The key as bytes. */
+	byte[] keyAsBytes;
+
+	/** The instance key. */
+	private String instanceKey;
+
+	/** The instance scheme. */
+	private String instanceScheme;
+
+	/** The key. */
+	SecretKey key;
+
+	/**
+	 * Instantiates a new triple des encryptor.
+	 * 
+	 * @param keyToEncrypt
+	 *            the key to encrypt
+	 * @throws Exception
+	 *             the exception
+	 */
+	public TripleDESEncryptor(String keyToEncrypt) throws Exception {
+		instanceKey = keyToEncrypt;
+		instanceScheme = DESEDE_ENCRYPTION_SCHEME;
+		keyAsBytes = instanceKey.getBytes(UNICODE_FORMAT);
+		myKeySpec = new DESedeKeySpec(keyAsBytes);
+		mySecretKeyFactory = SecretKeyFactory.getInstance(instanceScheme);
+		cipher = Cipher.getInstance(instanceScheme);
+		key = mySecretKeyFactory.generateSecret(myKeySpec);
+	}
+
+	/**
+	 * Encrypt.
+	 * 
+	 * @param unencryptedString
+	 *            the unencrypted string
+	 * @return the string
+	 */
+	public String encrypt(String unencryptedString) {
+		String encryptedString = null;
+		try {
+			cipher.init(Cipher.ENCRYPT_MODE, key);
+			byte[] plainText = unencryptedString.getBytes(UNICODE_FORMAT);
+			byte[] encryptedText = cipher.doFinal(plainText);
+			byte enc[] = org.apache.commons.codec.binary.Base64.encodeBase64(encryptedText);			
+			encryptedString = new String(enc, UNICODE_FORMAT);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return encryptedString;
+	}
+
+	/**
+	 * Decrypt.
+	 * 
+	 * @param encryptedString
+	 *            the encrypted string
+	 * @return the string
+	 */
+	public String decrypt(String encryptedString) {
+		String decryptedText = null;
+		try {
+			cipher.init(Cipher.DECRYPT_MODE, key);			
+			byte[] encryptedText = org.apache.commons.codec.binary.Base64.decodeBase64(encryptedString.getBytes(UNICODE_FORMAT));
+			byte[] plainText = cipher.doFinal(encryptedText);
+			decryptedText = bytes2String(plainText);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return decryptedText;
+	}
+
+	/**
+	 * Returns String From An Array Of Bytes.
+	 * 
+	 * @param bytes
+	 *            the bytes
+	 * @return the string
+	 */
+	private static String bytes2String(byte[] bytes) {
+		StringBuffer stringBuffer = new StringBuffer();
+		for (int i = 0; i < bytes.length; i++) {
+			stringBuffer.append((char) bytes[i]);
+		}
+		return stringBuffer.toString();
+	}
+
+	/**
+	 * Testing The DESede Encryption And Decryption Technique.
+	 * 
+	 * @param args
+	 *            the arguments
+	 * @throws Exception
+	 *             the exception
+	 */
+	public static void main(String args[]) throws Exception {
+		TripleDESEncryptor myEncryptor = new TripleDESEncryptor("safd&%$245fg546dfdfws43gfhhgh");
+		String stringToEncrypt = "Test";
+		String encrypted = myEncryptor.encrypt(stringToEncrypt);
+		String decrypted = myEncryptor.decrypt(encrypted);
+		System.out.println("String To Encrypt: " + stringToEncrypt);
+		System.out.println("Encrypted Value :" + encrypted);
+		System.out.println("Decrypted Value :" + decrypted);
+	}
+}

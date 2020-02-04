@@ -1,0 +1,205 @@
+package com.mwt.umap.dal;
+
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import org.apache.log4j.Logger;
+import org.hibernate.ejb.Ejb3Configuration;
+
+import com.mwt.umap.userMngt.bean.Module;
+import com.mwt.umap.userMngt.bean.Role;
+import com.mwt.umap.userMngt.bean.RoleAccess;
+import com.mwt.umap.userMngt.bean.User;
+import com.mwt.umap.userMngt.bean.UserRole;
+
+
+/**
+ * EntityManagerFactory Builder.
+ * 
+ * <p>
+ * Builds an EntityManagerFactory from given parameters. You should use this class to get EntityManager 
+ * for any arbitrary database. This class should be used when configuration of EntityManager 
+ * is not possible through persistance.xml.
+ * For getting EntityManager using persistance.xml use {@link com.mwt.umap.dal.EntityManagerFactoryBuilt}.
+ * </p>
+ * 
+ * @author Rohan Jamkhedkar
+ */
+public class EntityManagerFactoryBuilder {
+
+	/** The inst. */
+	private static EntityManagerFactoryBuilder inst;
+
+	/** The entity manager factory. */
+	private static EntityManagerFactory entityManagerFactory;
+
+	/** The Constant LOG. */
+	private static final Logger LOG = Logger.getLogger(EntityManagerFactoryBuilt.class);
+
+	/**
+	 * Instantiates a new entity manager factory holder.
+	 * 
+	 * @param persistanceUnitName
+	 *            the persistance unit name
+	 * @param url
+	 *            the url
+	 * @param driverClass
+	 *            the driver class
+	 * @param username
+	 *            the username
+	 * @param password
+	 *            the password
+	 * @param dialect
+	 *            the dialect
+	 * @param showSql
+	 *            the show sql
+	 * @param classes
+	 *            the classes
+	 */
+	private EntityManagerFactoryBuilder(String persistanceUnitName, String url, String driverClass, String username, String password, String dialect,
+			String showSql, List<Class<?>> classes) {
+		Ejb3Configuration cfg = new Ejb3Configuration();
+		cfg.setProperty("hibernate.connection.url", url);
+		cfg.setProperty("hibernate.connection.driver_class", driverClass);
+		cfg.setProperty("hibernate.connection.username", username);
+		cfg.setProperty("hibernate.connection.password", password);
+		cfg.setProperty("hibernate.dialect", dialect);
+		cfg.setProperty("hibernate.jdbc.batch_size", "0");
+		cfg.setProperty("hibernate.show_sql", showSql);
+		cfg.setProperty("connection.autoReconnect", "true");
+		cfg.setProperty("connection.autoReconnectForPools", "true");
+		cfg.setProperty("connection.is-connection-validation-required", "true");
+		cfg.setProperty("hibernate.connection.release_mode", "after_transaction");
+		cfg.setProperty("transaction.auto_close_session", "true");
+		cfg.setProperty("transaction.flush_before_completion", "true");
+		cfg.setProperty("transaction.factory_class", "org.hibernate.transaction.JDBCTransactionFactory");
+		cfg.setProperty("hibernate.bytecode.use_reflection_optimizer", "true");
+		cfg.setProperty("jdbc.use_streams_for_binary", "true");
+
+		cfg.setProperty("hibernate.c3p0.idle_test_period", "100");
+		cfg.setProperty("hibernate.c3p0.max_size", "100");
+		cfg.setProperty("hibernate.c3p0.max_statements", "0");
+		cfg.setProperty("hibernate.c3p0.min_size", "2");
+		cfg.setProperty("hibernate.c3p0.timeout", "20000");
+
+		cfg.setProperty("hibernate.c3p0.acquire_increment", "1");
+		cfg.setProperty("hibernate.generate_statistics", "false");
+		for (Class<?> cls : classes) {
+			cfg.addAnnotatedClass(cls);
+		}
+		entityManagerFactory = cfg.buildEntityManagerFactory();
+	}
+
+	/**
+	 * Rebuild EntityManagerFactory.
+	 * 
+	 * @param persistanceUnitName
+	 *            the persistance unit name
+	 * @param url
+	 *            the url
+	 * @param driverClass
+	 *            the driver class
+	 * @param username
+	 *            the username
+	 * @param password
+	 *            the password
+	 * @param dialect
+	 *            the dialect
+	 * @param showSql
+	 *            the show sql
+	 * @param classes
+	 *            the classes
+	 */
+	public static synchronized void buildEntityManagerFactory(String persistanceUnitName, String url, String driverClass, String username,
+			String password, String dialect, String showSql, List<Class<?>> classes) {
+		try {
+			if (inst == null || entityManagerFactory == null) {
+				inst = new EntityManagerFactoryBuilder(persistanceUnitName, url, driverClass, username, password, dialect, showSql, classes);
+			} else {
+				LOG.error("EntityManagerFactory already created");
+			}
+		} catch (Exception e) {
+			LOG.error("Error Creating EntityManager", e);
+		}
+	}
+
+	/**
+	 * Gets the single instance of EntityManagerFactoryBuilder.
+	 * 
+	 * @return single instance of EntityManagerFactoryBuilder
+	 */
+	public static EntityManagerFactoryBuilder getInstance() {
+		if (inst != null) {
+			return inst;
+		} else {
+			LOG.error("Please call buildEntityManagerFactory first");
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the entity manager.
+	 * 
+	 * @return the entity manager
+	 */
+	public synchronized EntityManager getEntityManager() {
+		EntityManager entityManager = null;
+		try {
+			if (entityManagerFactory != null) {
+				entityManager = entityManagerFactory.createEntityManager();
+			}
+		} catch (Exception e) {
+			LOG.error("getEntityManager", e);
+			entityManager = null;
+		}
+		return entityManager;
+	}
+
+	/**
+	 * Close the single entityManager instance.
+	 * 
+	 * @param entityManager
+	 *            the entity manager
+	 */
+	public void closeEntityManager(final EntityManager entityManager) {
+		if (entityManager != null) {
+			synchronized (entityManager) {
+				if (entityManager.isOpen()) {
+					entityManager.clear();
+					entityManager.close();
+				}
+			}
+		}
+	}
+
+	/**
+	 * return session factory.
+	 * 
+	 * @return the entity manager factory
+	 */
+	public EntityManagerFactory getEntityManagerFactory() {
+		return entityManagerFactory;
+	}
+
+	/**
+	 * The main method.
+	 * 
+	 * @param args
+	 *            the arguments
+	 */
+	public static void main(String[] args) {
+
+		List<Class<?>> classes = new ArrayList<Class<?>>();
+		classes.add(User.class);
+		classes.add(UserRole.class);
+		classes.add(Role.class);
+		classes.add(RoleAccess.class);
+		classes.add(Module.class);
+		EntityManagerFactoryBuilder.buildEntityManagerFactory("test", "jdbc:mysql://localhost:3306/umapDB", "com.mysql.jdbc.Driver", "root", "root",
+				"org.hibernate.dialect.MySQLDialect", "false", classes);
+		EntityManager em = EntityManagerFactoryBuilder.getInstance().getEntityManager();
+		System.out.println(em.createQuery("from User").getResultList());
+
+	}
+}

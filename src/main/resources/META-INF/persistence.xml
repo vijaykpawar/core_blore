@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<persistence version="1.0" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd
+http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:orm="http://java.sun.com/xml/ns/persistence/orm" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <persistence-unit name="blore" transaction-type="RESOURCE_LOCAL">    
+    		<properties>
+			<property name="hibernate.connection.url" value="jdbc:mysql://localhost:3306/chatdb"/>
+			<property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
+			<property name="hibernate.connection.driver_class" value="com.mysql.jdbc.Driver"/>
+			<property name="hibernate.connection.username" value="root"/>
+			<property name="hibernate.connection.password" value="root"/>
+			<property name="hibernate.jdbc.batch_size" value="0"/>
+			<property name="hibernate.show_sql" value="true"/>
+			<property name="connection.autoReconnect" value="true"/>
+			<property name="connection.autoReconnectForPools" value="true"/>
+			<property name="connection.is-connection-validation-required" value="true"/>
+			<property name="hibernate.connection.release_mode" value="after_transaction"/>
+			<property name="transaction.auto_close_session" value="true"/>
+			<property name="transaction.flush_before_completion" value="true"/>
+			<property name="transaction.factory_class" value="org.hibernate.transaction.JDBCTransactionFactory"/>
+			<property name="hibernate.bytecode.use_reflection_optimizer" value="true"/>
+			<property name="jdbc.use_streams_for_binary" value="true"/>
+			<property name="hibernate.c3p0.idle_test_period" value="100"/>
+			<property name="hibernate.c3p0.max_size" value="100"/>
+			<property name="hibernate.c3p0.max_statements" value="0"/>			
+			<property name="hibernate.c3p0.min_size" value="2"/>
+			<property name="hibernate.c3p0.timeout" value="20000"/>
+			<property name="hibernate.c3p0.acquire_increment" value="1"/>
+			<property name="hibernate.generate_statistics" value="false"/>
+			  <property name="hibernate.hbm2ddl.auto" value="update"/> 
+		</properties>
+    </persistence-unit>
+</persistence>

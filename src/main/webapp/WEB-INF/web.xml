@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app id="WebApp_ID" version="2.5"
+ xmlns="http://java.sun.com/xml/ns/javaee"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+ <description>Sample application</description>
+ <display-name>char app</display-name>
+
+ <session-config>
+  <session-timeout>30</session-timeout>
+ </session-config>
+ <welcome-file-list>
+  <welcome-file>index.html</welcome-file>
+ </welcome-file-list>
+ <filter>
+        <filter-name>Resteasy</filter-name>
+        <filter-class>
+            org.jboss.resteasy.plugins.server.servlet.FilterDispatcher
+        </filter-class>
+</filter>
+<filter-mapping>
+	<filter-name>Resteasy</filter-name>
+	<url-pattern>/core/*</url-pattern>
+</filter-mapping> 
+<context-param>
+		<param-name>resteasy.servlet.mapping.prefix</param-name>
+		<param-value>/core</param-value>
+</context-param>
+ <context-param>
+		<param-name>resteasy.scan.resources</param-name>
+		<param-value>true</param-value>
+</context-param>
+
+</web-app>

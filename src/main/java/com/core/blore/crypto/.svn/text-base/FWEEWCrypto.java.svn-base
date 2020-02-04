@@ -1,0 +1,163 @@
+package com.mwt.umap.crypto;
+
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+
+/**
+ * Contains cryptography handler methods. 
+ * 
+ * @author Amol Vedak
+ */
+public class FWEEWCrypto {
+
+	/** The aes cipher. */
+	private Cipher aesCipher;
+
+	/** The aes de cipher. */
+	private Cipher aesDeCipher;
+
+	/** The secret key. */
+	private SecretKey secretKey;
+
+	/** The iv parameter spec. */
+	private IvParameterSpec ivParameterSpec;
+
+	/** The Constant TAG. */
+	public static final String TAG = "FWEEWCrypto";
+
+	/** The cipher transformation. */
+	private static final String CIPHER_TRANSFORMATION = "AES/CBC/PKCS5Padding";
+
+	/** The cipher algorithm. */
+	private static final String CIPHER_ALGORITHM = "AES";
+	// Replace me with a 16-byte key, share between Java and C#
+	/** The raw secret key. */
+	private static final byte[] RAW_SECRET_KEY = { 0x01, 0x04, 0x23, 0x21, 0x43, 0x12, 0x18, 0x08, 0x07, 0x03, 0x02, 0x15, 0x13, 0x22, 0x27, 0x35 };
+
+	/** The messagedigest algorithm. */
+	private static final String MESSAGEDIGEST_ALGORITHM = "MD5";
+
+	/**
+	 * Instantiates a new fWEEW crypto.
+	 * 
+	 * @param passphrase
+	 *            the passphrase
+	 */
+	public FWEEWCrypto(final String passphrase) {
+		byte[] passwordKey = encodeDigest(passphrase);
+		try {
+			aesCipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
+		} catch (NoSuchAlgorithmException e) {
+			System.out.println("No such algorithm " + CIPHER_ALGORITHM + e);
+		} catch (NoSuchPaddingException e) {
+			System.out.println("No such padding PKCS5" + e);
+		}
+		secretKey = new SecretKeySpec(passwordKey, CIPHER_ALGORITHM);
+		ivParameterSpec = new IvParameterSpec(RAW_SECRET_KEY);
+	}
+
+	/**
+	 * Encrypt as base64.
+	 * 
+	 * @param clearData
+	 *            the clear data
+	 * @return the string
+	 */
+	public final String encryptAsBase64(final byte[] clearData) {
+		byte[] encryptedData = encrypt(clearData);
+		return Base64.encodeBytes(encryptedData);
+	}
+
+	/**
+	 * Encrypt.
+	 * 
+	 * @param clearData
+	 *            the clear data
+	 * @return the byte[]
+	 */
+	public final byte[] encrypt(final byte[] clearData) {
+		try {
+			aesCipher.init(Cipher.ENCRYPT_MODE, secretKey, ivParameterSpec);
+		} catch (InvalidKeyException e) {
+			System.out.println("Invalid key" + e);
+			return null;
+		} catch (InvalidAlgorithmParameterException e) {
+			System.out.println("Invalid algorithm " + CIPHER_ALGORITHM + e);
+			return null;
+		}
+
+		byte[] encryptedData;
+		try {
+			encryptedData = aesCipher.doFinal(clearData);
+		} catch (IllegalBlockSizeException e) {
+			System.out.println("Illegal block size" + e);
+			return null;
+		} catch (BadPaddingException e) {
+			System.out.println("Bad padding" + e);
+			return null;
+		}
+		return encryptedData;
+	}
+
+	/**
+	 * Encode digest.
+	 * 
+	 * @param text
+	 *            the text
+	 * @return the byte[]
+	 */
+	private byte[] encodeDigest(final String text) {
+		MessageDigest digest;
+		try {
+			digest = MessageDigest.getInstance(MESSAGEDIGEST_ALGORITHM);
+			return digest.digest(text.getBytes());
+		} catch (NoSuchAlgorithmException e) {
+			System.out.println("No such algorithm " + MESSAGEDIGEST_ALGORITHM + e);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Encrypt.
+	 * 
+	 * @param msg
+	 *            the msg
+	 * @return the string
+	 */
+	public static String encrypt(final String msg) {
+		FWEEWCrypto crypt = new FWEEWCrypto("XATy20Dwe");
+		String data = crypt.encryptAsBase64(msg.getBytes());
+		return data;
+	}
+
+	/**
+	 * Decrypt base64.
+	 * 
+	 * @param encryptedData
+	 *            the encrypted data
+	 * @return the string
+	 */
+	public final String decryptBase64(final String encryptedData) {
+		try {
+			byte[] decodedData = Base64.decode(encryptedData);
+			aesDeCipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
+			aesDeCipher.init(Cipher.DECRYPT_MODE, secretKey, ivParameterSpec);
+			byte[] arr = aesDeCipher.doFinal(decodedData);
+			return new String(arr);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+}
